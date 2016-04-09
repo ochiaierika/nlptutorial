@@ -1,9 +1,9 @@
 # -*- coding: utf8 -*-
 __author__ = 'erika.ochiai'
-import os
+import sys
 
-def main():
-    input_file = os.path.expanduser('~/research/practice/nlptutorial/test/00-input.txt')
+
+def main(input_file):
     char_dic = dict()
     with open(input_file, 'r') as f:
         for line in f:
@@ -15,8 +15,11 @@ def main():
                     char_dic[char] = 1
 
     for char, count in sorted(char_dic.iteritems(), key=lambda x: x[0]):
-        print ('{} {}'.format(char, count))
+        print ('{}\t{}'.format(char, count))
 
 
 if __name__=='__main__':
-    main()
+    if len(sys.argv) < 2:
+        print('Please set the trianing ')
+    input_file = sys.argv[1]
+    main(input_file)
