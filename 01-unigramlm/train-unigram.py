@@ -9,17 +9,13 @@ def main(input_file):
     with open(input_file, 'r') as f:
         for line in f:
             line = line.rstrip().split(' ')
+            line.append('</s>')
             for word in line:
                 if word in count_uni:
                     count_uni[word] += 1
                 else:
                     count_uni[word] = 1
                 total += 1
-            if '</s>' in count_uni:
-                count_uni['</s>'] += 1
-            else:
-                count_uni['</s>'] = 1
-            total += 1
 
     for word, count in sorted(count_uni.iteritems(), key=lambda x:x[0]):
         print('%s\t%f' % (word, count/total))
