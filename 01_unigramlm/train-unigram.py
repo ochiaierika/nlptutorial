@@ -23,6 +23,6 @@ def main(input_file):
 
 if __name__=='__main__':
     if len(sys.argv) < 2:
-        print('Please set the trianing ')
+        print('Please set the training file. ')
     input_file = sys.argv[1]
     main(input_file)
