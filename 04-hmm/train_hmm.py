@@ -4,6 +4,7 @@ __author__ = 'erika.ochiai'
 import sys
 from collections import defaultdict
 
+
 def save_trained_hmm(output_file, emit, transit, context):
     with open(output_file, 'w') as f:
         for k, v in sorted(transit.iteritems(), key=lambda x:x[0]):
