@@ -4,7 +4,6 @@ __author__ = 'erika.ochiai'
 from collections import defaultdict
 import math
 import sys
-
 N = 10**6
 LAMB = 0.95
 
@@ -21,49 +20,69 @@ def load_hmm_model(input):
     return trans, emission, possible_tags
 
 
+def calc_prob(key, dic, smoothing=False):
+    N = 10**6
+    LAMB = 0.95
+    prob = 0.
+    if smoothing is True:
+        if key in dic:
+            prob = dic[key]
+    else:
+        prob = (1.-LAMB) / N
+        if key in dic:
+            prob += LAMB * dic[key]
+    return prob
+
 def check_hmm(trained_file, test_file):
     trans, emission, possible_tags = load_hmm_model(trained_file)
     with open(test_file, 'r') as f:
         for line in f:
-            best_score, best_edge = defaultdict(int), defaultdict(int)
+            best_score, best_edge = dict(), dict()
             best_score['0 <s>'] = 0.
             best_edge['0 <s>'] = None
             words = line.rstrip().split(' ')
             l = len(words)
+            # forward
+            #   first
+            for current in possible_tags.keys():
+                best_key = '1 ' + current
+                trans_key = '<s> ' + current
+                emiss_key = '<s> ' + words[0]
+                score = -math.log(calc_prob(trans_key, trans), 2) - math.log(calc_prob(emiss_key, emission), 2)
+                best_score[best_key] = score
+                best_edge[best_key] = '0 <s>'
 
-            for i in range(0, l):
-                # prev
+            #   middle
+            for i in range(1, l):
                 for prev in possible_tags.keys():
                     for current in possible_tags.keys():
-                        score = 0.
-                        if '{} {}'.format(i, prev) in best_score and '{} {}'.format(prev, current) in trans:
+                        prev_key = '{} {}'.format(i, prev)
+                        trans_key = '{} {}'.format(prev, current)
+                        emiss_key = '{} {}'.format(current, words[i])
 
-                            trans_prob_log = math.log(trans['{} {}'.format(prev, current)], 2)
+                        if prev_key in best_score:
+                            score = best_score[prev_key] - math.log(calc_prob(trans_key, trans), 2) - math.log(calc_prob(emiss_key, emission), 2)
 
-                            emission_prob = (1.-LAMB) / N
-                            if emission['{} {}'.format(current, words[i])] != 0.0:
-                                emission_prob += LAMB * emission['{} {}'.format(current, words[i])]
-                            emission_prob_log = math.log(emission_prob, 2)
+                        current_key = '{} {}'.format(i+1, current)
+                        if current_key not in best_score or best_score[current_key] > score:
+                            best_score[current_key] = score
+                            best_edge[current_key] = prev_key
 
-                            score = best_score['{} {}'.format(i, prev)] - trans_prob_log - emission_prob_log
-                        if '{} {}'.format(i+1, current) not in best_score or best_score['{} {}'.format(i+1, current)] < score:
-                            best_score['{} {}'.format(i+1, current)] = score
-                            if i == 0:
-                                best_edge['{} {}'.format(i+1, current)] = '{} {}'.format(i, '<s>')
-                            else:
-                                best_edge['{} {}'.format(i+1, current)] = '{} {}'.format(i, prev)
+            #   end
+            for prev in possible_tags:
+                prev_key = '{} {}'.format(l, prev)
+                trans_key = '{} {}'.format(prev, '</s>')
 
-            for prev in possible_tags.keys():
-                if '{} {}'.format(l, prev) in best_score and '{} {}'.format(prev, '</s>') in trans:
-                    trans_prob_log = 0.0
-                    if trans['{} {}'.format(prev, '</s>')] != 0.0:
-                        trans_prob_log = math.log(trans['{} {}'.format(prev, '</s>')], 2)
-                    score = best_score['{} {}'.format(l, prev)] - trans_prob_log
-                    if '{} {}'.format(l+1, '</s>') not in best_score \
-                            or best_score['{} {}'.format(l+1, '</s>')] < score:
-                        best_score['{} {}'.format(l+1, '</s>')] = score
-                        best_edge['{} {}'.format(l+1, '</s>')] = '{} {}'.format(l, prev)
+                if prev_key in best_score:
+                    score = best_score[prev_key] - math.log(calc_prob(trans_key, trans), 2)
 
+                current_key = '{} {}'.format(l+1, '</s>')
+                if current_key not in best_score or best_score[current_key] > score:
+                    best_score[current_key] = score
+                    best_edge[current_key] = prev_key
+
+
+            # backward
             tags = []
             next_edge = best_edge['{} {}'.format(l+1, '</s>')]
             while next_edge != "0 <s>":
