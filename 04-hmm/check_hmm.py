@@ -4,8 +4,7 @@ __author__ = 'erika.ochiai'
 from collections import defaultdict
 import math
 import sys
-N = 10**6
-LAMB = 0.95
+
 
 def load_hmm_model(input):
     trans, emission, possible_tags = defaultdict(float), defaultdict(float), defaultdict(float)
