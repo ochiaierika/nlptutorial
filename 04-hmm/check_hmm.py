@@ -47,7 +47,8 @@ def check_hmm(trained_file, test_file):
                 best_key = '1 ' + current
                 trans_key = '<s> ' + current
                 emiss_key = '<s> ' + words[0]
-                score = -math.log(calc_prob(trans_key, trans), 2) - math.log(calc_prob(emiss_key, emission), 2)
+                score = - math.log(calc_prob(trans_key, trans), 2) \
+                        - math.log(calc_prob(emiss_key, emission), 2)
                 best_score[best_key] = score
                 best_edge[best_key] = '0 <s>'
 
@@ -60,7 +61,9 @@ def check_hmm(trained_file, test_file):
                         emiss_key = '{} {}'.format(current, words[i])
 
                         if prev_key in best_score:
-                            score = best_score[prev_key] - math.log(calc_prob(trans_key, trans), 2) - math.log(calc_prob(emiss_key, emission), 2)
+                            score = best_score[prev_key]\
+                                    - math.log(calc_prob(trans_key, trans), 2)\
+                                    - math.log(calc_prob(emiss_key, emission), 2)
 
                         current_key = '{} {}'.format(i+1, current)
                         if current_key not in best_score or best_score[current_key] > score:
